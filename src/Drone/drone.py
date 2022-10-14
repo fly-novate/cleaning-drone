@@ -58,6 +58,53 @@ class Drone:
         self.changeVehicleMode("LAND")
         time.sleep(1)
         
+    def sendLocalNedVelocity(self, vx, vy, vz):
+        msg = self.vehicle.message_factory.set_position_target_local_ned_encode(
+            0,
+            0, 0,
+            mavutil.mavlink.MAV_FRAME_BODY_OFFSET_NED,
+            0b0000111111000111,
+            0, 0, 0,
+            vx, vy, vz,
+            0, 0, 0,
+            0, 0)
+        self.vehicle.send_mavlink(msg)
+        self.vehicle.flush()
+
+    def moveForward(self):
+        counter = 0
+        while counter < 2:
+            self.sendLocalNedVelocity(0.05, 0, 0)
+            time.sleep(1)
+            print('forward')
+            counter = counter+1
+
+    def moveBackward(self):
+        counter = 0
+        while counter < 2:
+            self.sendLocalNedVelocity(-0.05, 0, 0)
+            time.sleep(1)
+            print('backward')
+            counter = counter+1
+
+    def moveRight(self):
+        counter = 0
+        while counter < 2:
+            self.sendLocalNedVelocity(0, 0.05, 0)
+            time.sleep(1)
+            print('right')
+            counter = counter+1
+
+
+    def moveLeft(self):
+        counter = 0
+        while counter < 2:
+            self.sendLocalNedVelocity(0, -0.05, 0)
+            time.sleep(1)
+            print('left')
+            counter = counter+1
+
+
 if __name__== "__main__":
     pass
 

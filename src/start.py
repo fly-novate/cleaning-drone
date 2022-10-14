@@ -26,6 +26,12 @@ def data_streams(drone,dataCollection):
     t.start()
     time.sleep(0.25)
 
+    move_loop = asyncio.new_event_loop()
+    move_loop.call_soon_threadsafe(Mongo.listenerMoveCommand,drone,dataCollection)
+    t = Thread(target=start_loop, args=(move_loop,))
+    t.start()
+    time.sleep(0.25)
+
     ##----> ADD CAMERA THREAD
 
     # camera_loop = asyncio.new_event_loop()
@@ -47,7 +53,7 @@ def mainStart(serial=None, connection=None,dataCollection=None):
         print(serial)
         drone = Drone(droneSerial=serial, connection=connection)
         print(drone)
-        
+
         # Initialise Drone Data on Mongo
         initDroneOnMongo(drone=drone,dataCollection=dataCollection)
         data_streams(drone=drone, dataCollection=dataCollection)

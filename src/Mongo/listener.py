@@ -1,9 +1,9 @@
 import time
 from threading import Event, Thread
 
-from ..util import keyboard_shutdown
+from ..util import keyboard_shutdown,createInspectionArea
 from .setup import mongoUpdateDroneBySerial
-
+from ..drone_clean import droneCleanDrop,droneCleanPickup
 def listenerMongoData(drone,dataCollection,exit_event):
     print("Mongo Listner Started")
     serial=drone.serial
@@ -21,20 +21,29 @@ def listenerMongoData(drone,dataCollection,exit_event):
             if document['fullDocument']['serial'] == serial:
                 
                 updated_takeOffStatus = document['fullDocument']['takeOffStatus']
-                #inspection_area = createInspectionArea(document=document)                
+                inspection_area = createInspectionArea(document=document)                
                 droneSerial = document['fullDocument']['serial']
 
                 #print(inspection_area)
 
                 if updated_takeOffStatus == True and droneSerial == serial:
                     print("------------------Take off---------------------")
+                    print("Check if the flight is to pick-up/drop a rover")
+                    print(" if Drop Rover")
 
                     ##------> START CLEANING ALGO
 
-                    # drone.area=inspection_area
-                    # t = Thread(target=droneSurvey,
-                    #            args=(drone,exit_event))
-                    # t.start()
+                    drone.area=inspection_area
+                    t = Thread(target=droneCleanDrop,
+                               args=(drone,exit_event))
+                    t.start()
+
+                    print("If Pick up")
+                    t = Thread(target=droneCleanPickup,
+                               args=(drone,exit_event))
+                    t.start()
+
+                    
 
                 elif updated_takeOffStatus == False and droneSerial == serial:
                     print("-------------------Land------------------------")

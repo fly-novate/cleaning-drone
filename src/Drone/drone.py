@@ -23,6 +23,8 @@ class Drone:
         self.droneStatus=1
         self.vehicle=vehicle
         self.takeoffStatus=False
+        self.targetPointLat=pos.lat * 10e-8
+        self.targetPointLon=pos.lon * 10e-8
 
     def changeVehicleMode(self,mode):
         print("Changing vehicle mode to",mode)
@@ -94,7 +96,6 @@ class Drone:
             time.sleep(1)
             print('right')
             counter = counter+1
-
 
     def moveLeft(self):
         counter = 0

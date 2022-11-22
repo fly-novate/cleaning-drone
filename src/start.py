@@ -1,6 +1,7 @@
 import asyncio
 from threading import Event, Thread
 import time
+import Camera as Camera
 
 
 from .Drone import *
@@ -19,33 +20,33 @@ def data_streams(drone,dataCollection):
     print('Starting Listening to MongoDB.\n')
     exit_event = Event()
 
-
     update_loop = asyncio.new_event_loop()
     update_loop.call_soon_threadsafe(Mongo.listenerMongoData,drone,dataCollection,exit_event)
     t = Thread(target=start_loop, args=(update_loop,))
     t.start()
     time.sleep(0.25)
 
-    move_loop = asyncio.new_event_loop()
-    move_loop.call_soon_threadsafe(Mongo.listenerMoveCommand,drone,dataCollection)
-    t = Thread(target=start_loop, args=(move_loop,))
-    t.start()
-    time.sleep(0.25)
-
-    ##----> ADD CAMERA THREAD
-
-    # camera_loop = asyncio.new_event_loop()
-    # camera_loop.call_soon_threadsafe(Camera.seek.main)
-    # t = Thread(target=start_loop, args=(camera_loop,))
-    # t.start()
-    # time.sleep(0.25)
-
-
     drone_data_loop = asyncio.new_event_loop()
     drone_data_loop.call_soon_threadsafe(Mongo.updateDroneData,dataCollection,drone)
     t = Thread(target=start_loop, args=(drone_data_loop,))
     t.start()
     time.sleep(0.25)
+
+    # move_loop = asyncio.new_event_loop()
+    # move_loop.call_soon_threadsafe(Mongo.listenerMoveCommand,drone,dataCollection)
+    # t = Thread(target=start_loop, args=(move_loop,))
+    # t.start()
+    # time.sleep(0.25)
+
+    ##----> ADD CAMERA THREAD
+
+    camera_loop = asyncio.new_event_loop()
+    camera_loop.call_soon_threadsafe(Camera.camera.main)
+    t = Thread(target=start_loop, args=(camera_loop,))
+    t.start()
+    time.sleep(0.25)
+
+
 
 
 def mainStart(serial=None, connection=None,dataCollection=None):

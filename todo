@@ -1,0 +1,11 @@
+Folder Structure
+ALGO    Figure out how to get wp to set the mission
+Mission Plan (Fly to wp 1)
+ALGO    centering with panel
+Rover out of drone Box
+Drone back to home
+ALGO    Rover cleaning
+Rover gives a signal when its cleaning is clean for drone to return
+Drone RTL (centering with panel)
+ALGO Rover Parking in drone
+ALGO Next Panel(depending on mission)

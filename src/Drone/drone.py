@@ -20,11 +20,13 @@ class Drone:
         self.area=[]
         self.socketIP=""
         self.socketPort=5656
-        self.droneStatus=1
         self.vehicle=vehicle
         self.takeoffStatus=False
         self.targetPointLat=pos.lat * 10e-8
         self.targetPointLon=pos.lon * 10e-8
+        self.roverSerial="ERROR000000000"
+        self.droneStatus="Free"
+        self.roverStatus="Free"
 
     def changeVehicleMode(self,mode):
         print("Changing vehicle mode to",mode)
@@ -53,6 +55,7 @@ class Drone:
 
         msg = self.vehicle.recv_match(type='COMMAND_ACK', blocking=True)
         print(msg)
+        return
 
     def landDrone(self):
         self.takeoffStatus=False
@@ -73,34 +76,34 @@ class Drone:
         self.vehicle.send_mavlink(msg)
         self.vehicle.flush()
 
-    def moveForward(self):
+    def moveForward(self, time=2, speed=0.5):
         counter = 0
-        while counter < 2:
-            self.sendLocalNedVelocity(0.05, 0, 0)
+        while counter < time:
+            self.sendLocalNedVelocity(speed, 0, 0)
             time.sleep(1)
             print('forward')
             counter = counter+1
 
-    def moveBackward(self):
+    def moveBackward(self, time=2, speed=0.5):
         counter = 0
-        while counter < 2:
-            self.sendLocalNedVelocity(-0.05, 0, 0)
+        while counter < time:
+            self.sendLocalNedVelocity(-speed, 0, 0)
             time.sleep(1)
             print('backward')
             counter = counter+1
 
-    def moveRight(self):
+    def moveRight(self, time=2, speed=0.5):
         counter = 0
-        while counter < 2:
-            self.sendLocalNedVelocity(0, 0.05, 0)
+        while counter < time:
+            self.sendLocalNedVelocity(0, speed, 0)
             time.sleep(1)
             print('right')
             counter = counter+1
 
-    def moveLeft(self):
+    def moveLeft(self, time=2, speed=0.5):
         counter = 0
-        while counter < 2:
-            self.sendLocalNedVelocity(0, -0.05, 0)
+        while counter < time:
+            self.sendLocalNedVelocity(0, -speed, 0)
             time.sleep(1)
             print('left')
             counter = counter+1

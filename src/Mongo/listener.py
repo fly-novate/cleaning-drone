@@ -1,71 +1,115 @@
 import time
 from threading import Event, Thread
-
 from ..util import keyboard_shutdown,createInspectionArea
 from .setup import mongoUpdateDroneBySerial
-from ..drone_clean import droneCleanDrop,droneCleanPickup
-def listenerMongoData(drone,dataCollection,exit_event):
+from ..drone_clean import droneCleanDrop,droneCleanPickup,goToHome,waitAtHome
+from datetime import datetime
+
+def listenerMongoData(drone,droneDataCollection,roverDataCollection,exit_event):
     print("Mongo Listner Started")
     serial=drone.serial
 
-    pipeline = [{
+    pipelineTakeOff = [{
         '$match': {
             '$and': [
                 {"updateDescription.updatedFields.takeOffStatus": {'$exists': True}},
                 {'operationType': "update"}]
         }
     }]
+
+
+    pipelineDroneStatus = [{
+        '$match': {
+            '$and': [
+                {"updateDescription.updatedFields.droneStatus": {'$exists': True}},
+                {'operationType': "update"}]
+        }
+    }]
     
     try:
-        for document in dataCollection.watch(pipeline=pipeline, full_document='updateLookup'):
+        for document in droneDataCollection.watch(pipeline=pipelineDroneStatus, full_document='updateLookup'):
             if document['fullDocument']['serial'] == serial:
                 
-                updated_takeOffStatus = document['fullDocument']['takeOffStatus']
-                inspection_area = createInspectionArea(document=document)                
+                # updated_takeOffStatus = document['fullDocument']['takeOffStatus']
+                updated_droneStatus = document['fullDocument']['droneStatus']
                 droneSerial = document['fullDocument']['serial']
+                print("Change in drone status")
+                print(updated_droneStatus)
 
-                #print(inspection_area)
+                # if(document['fullDocument']['droneStatus']=="Free"):
+                    # print("Edge case, Deal later")
+                    
+                if droneSerial == serial:
+                    # if(mongoRoverStatus(drone=drone,roverDataCollection=roverDataCollection)=="Free"):
+                    # if((drone.droneStatus=="Free") and updated_droneStatus=="Drop"):
+                    if(updated_droneStatus=="Drop"):
+                        drone.droneStatus='Drop'
+                        print("Drop")
+                        print("------------------Drop Rover---------------------")
+                        t = Thread(target=droneCleanDrop,
+                                args=(drone,exit_event,droneDataCollection,roverDataCollection))
+                        # t = Thread(target=droneCleanDrop,
+                        #        args=(drone,exit_event,droneDataCollection,roverDataCollection=roverDataCollection))
+                        t.start()
 
-                if updated_takeOffStatus == True and droneSerial == serial:
-                    print("------------------Take off---------------------")
-                    print("Check if the flight is to pick-up/drop a rover")
-                    print(" if Drop Rover")
+                    elif(updated_droneStatus=="Pickup"):
+                        print("Pickup")
+                        print("------------------Pick Rover---------------------")
+                        t = Thread(target=droneCleanPickup,
+                                   args=(drone,exit_event,droneDataCollection,roverDataCollection))
+                        t.start()
+                   
+                    elif(updated_droneStatus=="goHome"):
+                        print("------------------Going Back to Home------------------")
+                        t = Thread(target=goToHome,
+                                   args=(drone,droneDataCollection,roverDataCollection,exit_event))
+                        t.start()
 
-                    ##------> START CLEANING ALGO
-
-                    drone.area=inspection_area
-                    t = Thread(target=droneCleanDrop,
-                               args=(drone,exit_event))
-                    t.start()
-
-                    print("If Pick up")
-                    t = Thread(target=droneCleanPickup,
-                               args=(drone,exit_event))
-                    t.start()
+                    elif(updated_droneStatus=="waitAtHome"):
+                        print("------------------Going Back to Home to wait------------------")
+                        t = Thread(target=waitAtHome,
+                                   args=(drone,droneDataCollection,exit_event))
+                        t.start()
+                    
+                    elif(updated_droneStatus=="nextPanel"):
+                        print("------------------Going to next panel------------------")
+                        t = Thread(target=droneCleanDrop,
+                                args=(drone,exit_event,droneDataCollection,roverDataCollection))
+                        # t = Thread(target=droneCleanDrop,
+                        #        args=(drone,exit_event,droneDataCollection,roverDataCollection=roverDataCollection))
+                        t.start()
+                        # t = Thread(target=nextPanel,
+                        #            args=(drone,exit_event,droneDataCollection))
+                        # t.start()
 
                     
+                    else:
+                        pass
+                    
 
-                elif updated_takeOffStatus == False and droneSerial == serial:
-                    print("-------------------Land------------------------")
-                    print("-> Start Landing Process")
+                # elif updated_takeOffStatus == False and droneSerial == serial:
+                #     print("-------------------Land------------------------")
+                #     print("-> Start Landing Process")
 
-                    ##------> LAND THE DRONE
+                #     ##------> LAND THE DRONE
 
-                    # vehicle land function from drone class
-                    # drone.landDrone()
-                    # exit_event.set()
-                    # print("-> Exit Event Set")
-                    # t.join()
+                #     # vehicle land function from drone class
+                #     # drone.landDrone()
+                #     # exit_event.set()
+                #     # print("-> Exit Event Set")
+                #     # t.join()
+                #     pass
                     
 
     except KeyboardInterrupt:
         keyboard_shutdown()
 
-def listenerMoveCommand(drone,dataCollection):
+
+def listenerMoveCommand(drone,droneDataCollection):
     print("Listening to Movement")
     serial=drone.serial
 
-    pipeline = [{
+    pipelineMoveCommand = [{
         '$match': {
             '$and': [
                 {"updateDescription.updatedFields.move": {'$exists': True}},
@@ -74,7 +118,7 @@ def listenerMoveCommand(drone,dataCollection):
     }]
 
     try:
-        for document in dataCollection.watch(pipeline=pipeline, full_document='updateLookup'):
+        for document in droneDataCollection.watch(pipeline=pipelineMoveCommand, full_document='updateLookup'):
             if document['fullDocument']['serial'] == serial:
                 
                 movementDirection = document['fullDocument']['move']
@@ -101,11 +145,11 @@ def listenerMoveCommand(drone,dataCollection):
         keyboard_shutdown()
 
 
-def updateDroneData(dataCollection,drone):
+def updateDroneData(droneDataCollection,drone):
     try:
         while True:
             print("Updating Drone")
-            mongoUpdateDroneBySerial(drone,dataCollection)
+            mongoUpdateDroneBySerial(drone,droneDataCollection)
             print(drone.serial)
             time.sleep(5)
     except KeyboardInterrupt:

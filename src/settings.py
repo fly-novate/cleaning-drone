@@ -7,10 +7,12 @@ load_dotenv(dotenv_path)
 
 MONGODB_ATLAS_URL = os.getenv('MONGODB_ATLAS_URL')
 DATABASE = os.getenv('DATABASE')
-COLLECTION = os.getenv('COLLECTION')
+DRONE_COLLECTION = os.getenv('DRONE_COLLECTION')
+ROVER_COLLECTION = os.getenv('ROVER_COLLECTION')
 
 print('Database: ' + DATABASE)
-print('Collection: ' + COLLECTION)
+print('DRONE_COLLECTION: ' + DRONE_COLLECTION)
+print('ROVER_COLLECTION: ' + ROVER_COLLECTION)
 
 
 

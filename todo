@@ -9,3 +9,54 @@ Rover gives a signal when its cleaning is clean for drone to return
 Drone RTL (centering with panel)
 ALGO Rover Parking in drone
 ALGO Next Panel(depending on mission)
+
+
+think about location details algo for drone rover comm.
+assign drones serial to rover
+
+
+
+
+
+
+
+
+
+Drone Rover Collab
+
+Drone Start : Get Rover serial
+
+
+
+
+Drone ----------> Center with panel and land-----------> droneStatus:"Drop"
+droneStatus:"Drop"----------> Rover Unparking start ------------> rover to initial position------------> roverStatus:"Busy"
+roverStatus:"Busy"----------> Drone RTL ------------> droneStatus:"Free"
+RoverCleaning done ------------> roverStatus:"Free"-----------check drone status == free-------> set takeoff = true so that listener gets invoked
+roverStatus:"Free" -----------> Drone Status:"OnTheWay"--------> drone goes back to the spot and lands-------> droneStatus:"Pickup"
+droneStatus:"Pickup"-----------> Rover Goes near drone and starts parking--------> Rover finishes parking------------> roverStatus:"Parked"
+roverStatus:"Parked"------------> Drone RTL/Next Panel (battery/mission)
+
+droneStatus: free, drop, pickup, OTW
+roverStatus: Busy, free,parked
+
+
+
+Location of rover
+
+
+
+droneStatus
+free, drop, dropped, rtl, free, pick, nextPanel
+roverStatus
+free, start ,busy, pickup,pickedUp
+
+droneStatus,roverStatus: takeOffStatus
+free,free: false
+drop,drop: true
+dropped,start: false
+rtl,busy: true
+free,busy: false
+pickup,pickup: true
+pickedup,pickup: false
+rtl,pickedup or nextPanel,pickedUp: true

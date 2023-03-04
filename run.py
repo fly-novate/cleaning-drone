@@ -3,24 +3,22 @@ import src.Mongo as Mongo
 import src.settings as settings
 import src.start as start
 
-
 def main():
     url = settings.MONGODB_ATLAS_URL
     db = settings.DATABASE
-    droneCol = settings.DRONE_COLLECTION
-    roverCol = settings.ROVER_COLLECTION
+    drone_col = settings.DRONE_COLLECTION
+    rover_col = settings.ROVER_COLLECTION
 
+    drone_collection = Mongo.mongo_connect(mongo_url=url, database=db, collection=drone_col)
+    rover_collection = Mongo.mongo_connect(mongo_url=url, database=db, collection=rover_col)
 
-    droneDataCollection = Mongo.mongoConnect(mongoUrl=url,database=db,collection=droneCol)
-    roverDataCollection = Mongo.mongoConnect(mongoUrl=url,database=db,collection=roverCol)
-
-    serial = settings.getserial()
+    serial = settings.get_serial()
     parser = argparse.ArgumentParser()
     parser.add_argument('--connect', default='127.0.0.1:14550')
     args = parser.parse_args()
 
-    print ('Connecting to vehicle on: %s' % args.connect)
-    start.mainStart(serial=serial, connection = args.connect,droneDataCollection=droneDataCollection,roverDataCollection=roverDataCollection)
+    print('Connecting to vehicle on: %s' % args.connect)
+    start.main_start(serial=serial, connection=args.connect, drone_collection=drone_collection, rover_collection=rover_collection)
 
 if __name__ == '__main__':
     main()

@@ -1,50 +1,57 @@
 import pymongo
-
+from ..Drone import Drone
 
 # Connect Mongo
-def mongoConnect(mongoUrl,database,collection):
-    mc = pymongo.MongoClient(mongoUrl)
+def mongo_connect(mongo_url, database, collection):
+    mc = pymongo.MongoClient(mongo_url)
     mydb = mc[database]
-    droneDataCollection = mydb[collection]
-    return droneDataCollection
+    drone_collection = mydb[collection]
+    return drone_collection
 
-def mongoConnectDroneBySerial(drone,droneDataCollection):
-    droneData= droneDataCollection.find_one({'serial': drone.serial})
-    if droneData:
-        drone.roverSerial=droneData['roverSerial']
-        mongoUpdateDroneBySerial(drone=drone,droneDataCollection=droneDataCollection)
+def connect_drone_by_serial(drone:Drone, drone_collection):
+    drone_data = drone_collection.find_one({'serial': drone.serial})
+    if drone_data:
+        drone.rover_serial = drone_data['roverSerial']
+        update_drone_by_serial(drone=drone, drone_collection=drone_collection)
     else:
-        mongoInsertDrone(drone=drone,droneDataCollection=droneDataCollection)
+        insert_drone(drone=drone, drone_collection=drone_collection)
     
-def mongoUpdateDroneBySerial(drone,droneDataCollection):
-    droneDataCollection.update_one({'serial': drone.serial}, {'$set': {'battery': drone.battery, 'location': {
-            'lat': drone.lat, 'lon': drone.lon}}})
+def update_drone_by_serial(drone:Drone, drone_collection):
+    drone.update_drone()
+    drone_collection.update_one({'serial': drone.serial}, {'$set': {'battery': drone.battery, 'location': {'lat': drone.lat, 'lon': drone.lon}}})
     print('DRONE UPDATED')
 
-def mongoInsertDrone(drone,droneDataCollection):
-    droneDataCollection.insert_one({'serial': drone.serial, 'battery': drone.battery, 'location': {
-            'lat': drone.lat, 'lon': drone.lon}, 'takeOffStatus': False, 'userId': None, 'droneStatus':"Free"})
+def insert_drone(drone:Drone, drone_collection):
+    drone.update_drone()
+    drone_collection.insert_one({'serial': drone.serial, 'battery': drone.battery, 'location': {'lat': drone.lat, 'lon': drone.lon}, 'takeOffStatus': False, 'userId': None, 'droneStatus':"Free"})
     print('DRONE ADDED')
 
-def mongoUpdateDroneStatus(drone,droneDataCollection,status):
-    droneDataCollection.update_one({'serial': drone.serial}, {'$set': {'droneStatus': status}})
-    drone.droneStatus=status
+def update_drone_status(drone:Drone, drone_collection, status):
+    drone_collection.update_one({'serial': drone.serial}, {'$set': {'droneStatus': status}})
+    drone.drone_status=status
     print('DRONE STATUS UPDATED')
 
+def update_rover_status(drone:Drone, rover_collection, status):
+    rover_collection.update_one({'serial': drone.rover_serial}, {'$set': {'roverStatus': status}})
+    drone.rover_status=status
+    print('ROVER STATUS UPDATED')    
 
-def mongoUpdateRoverStatus(drone,roverDataCollection,status):
-    roverDataCollection.update_one({'serial': drone.roverSerial}, {'$set': {'droneStatus': status}})
-    drone.roverStatus=status
-    print('DRONE STATUS UPDATED')    
-
-
-# def mongoGetRoverStatus(drone,roverDataCollection):
-#     roverDocument=roverDataCollection.find_one({'serial': drone.roverSerial})
-#     roverStatus=roverDocument['roverStatus']
-#     drone.roverStatus=roverStatus
+# def get_rover_status(drone:Drone, rover_collection):
+#     rover_document = rover_collection.find_one({'serial': drone.rover_serial})
+#     rover_status = rover_document['roverStatus']
+#     drone.rover_status = rover_status
 #     print('ROVER STATUS UPDATED')
 
-# def mongoUpdateDroneTakeoffStatus(drone,droneDataCollection,takeoffStatus):
-    # droneDataCollection.update_one({'serial': drone.serial}, {'$set': {'takeoffStatus': takeoffStatus}})
-    # drone.takeoffStatus=takeoffStatus
-    # print('Takeoff Status UPDATED')
+# def update_drone_takeoff_status(drone:Drone, drone_collection, takeoff_status):
+#     drone_collection.update_one({'serial': drone.serial}, {'$set': {'takeoffStatus': takeoff_status}})
+#     drone.takeoff_status = takeoff_status
+#     print('Takeoff Status UPDATED')
+
+def find_user(drone:Drone, collection):
+    data = collection.find_one({'serial': drone.serial})
+    for key, val in data.items():
+        if 'userId' in key:
+            drone.user_id = val
+
+if __name__ == '__main__':
+    pass

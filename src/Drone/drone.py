@@ -1,5 +1,6 @@
 from pymavlink import mavutil
 from time import sleep
+import math
 from ..Camera import Camera
 
 class Drone:
@@ -11,7 +12,9 @@ class Drone:
         _ = vehicle.messages.keys() #All parameters that can be fetched
         
         pos = vehicle.recv_match(type='GLOBAL_POSITION_INT', blocking=True)
-        
+        attitude = self.vehicle.recv_match(type='ATTITUDE', blocking=True)
+        self.update_drone()
+
         self.serial = drone_serial
         self.area={}
         self.socket_ip = ""
@@ -26,6 +29,7 @@ class Drone:
         self.user_id = ''
         self.camera = Camera()
         self.is_model_free = True
+        self.yaw = math.degrees(attitude.yaw)
 
     def change_vehicle_mode(self, mode):
         print("Changing vehicle mode to", mode)

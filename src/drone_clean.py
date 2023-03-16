@@ -9,8 +9,8 @@ import math
 
 def drone_cleaning(drone:Drone, model:Model, exit_event):
     # add initial angle code to pickup initial angle from mongo
-    initial_angle = 0
-    traversal_slope = math.tan(initial_angle)
+    initial_angle = drone.yaw
+    traversal_slope = math.tan(math.radians(initial_angle))
 
     points = []
     for coordinate in drone.area:
@@ -42,7 +42,7 @@ def drone_cleaning(drone:Drone, model:Model, exit_event):
     right = []
     array_dist = 2          # input array_dist from software in meters
     array_dist = array_dist / 111300        # in arc
-    vertical_dist = array_dist * math.cos(initial_angle)
+    vertical_dist = array_dist * math.cos(math.radians(initial_angle))
 
     possible_lat = min_lat
     while possible_lat <= max_lat:

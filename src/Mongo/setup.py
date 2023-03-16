@@ -18,12 +18,12 @@ def connect_drone_by_serial(drone:Drone, drone_collection):
     
 def update_drone_by_serial(drone:Drone, drone_collection):
     drone.update_drone()
-    drone_collection.update_one({'serial': drone.serial}, {'$set': {'battery': drone.battery, 'location': {'lat': drone.lat, 'lon': drone.lon}}})
+    drone_collection.update_one({'serial': drone.serial}, {'$set': {'battery': drone.battery, 'location': {'lat': drone.lat, 'lon': drone.lon}, 'yaw': drone.yaw}})
     print('DRONE UPDATED')
 
 def insert_drone(drone:Drone, drone_collection):
     drone.update_drone()
-    drone_collection.insert_one({'serial': drone.serial, 'battery': drone.battery, 'location': {'lat': drone.lat, 'lon': drone.lon}, 'takeOffStatus': False, 'userId': None, 'droneStatus':"Free"})
+    drone_collection.insert_one({'serial': drone.serial, 'battery': drone.battery, 'location': {'lat': drone.lat, 'lon': drone.lon}, 'yaw': drone.yaw, 'takeOffStatus': False, 'userId': None, 'droneStatus':"Free"})
     print('DRONE ADDED')
 
 def update_drone_status(drone:Drone, drone_collection, status):

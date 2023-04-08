@@ -1,7 +1,31 @@
 from pymavlink import mavutil
+from enum import Enum
 from time import sleep
 import math
 from ..Camera import Camera
+from . import droneFunctions
+
+
+class RoverStatus(Enum):
+    FREE = 1
+    INIT = 2
+    DOCK = 3
+    UNDOCK = 4
+    BUSY = 5
+    CLEANING = 6
+    PICKUP = 7
+
+class DroneStatus(Enum):
+    FREE = 1
+    INIT = 2
+    WAIT_AT_HOME = 3
+    GO_HOME = 4
+    NEXT_PANEL=5
+    DOCK = 6
+    PICKUP = 7
+    DROP = 8
+    DROPPED = 9
+    WAITING=10
 
 class Drone:
     def __init__(self, drone_serial, connection):
@@ -75,70 +99,23 @@ class Drone:
     def land_drone(self):
         self.takeoff_status = False
         print("landing...")        
-        self.change_vehicle_mode("LAND")
-        sleep(1)
+        self.changeVehicleMode("LAND")
+        time.sleep(1)
 
-    def send_local_ned_velocity(self, vx, vy, vz):
-        self.vehicle.mav.send(mavutil.mavlink.MAVLink_set_position_target_local_ned_message(10, self.vehicle.target_system,
-                                                                                            self.vehicle.target_component, 
-                                                                                            mavutil.mavlink.MAV_FRAME_BODY_OFFSET_NED, 
-                                                                                            int(0b110111000111), 
-                                                                                            0, 0, 0, vx, vy, vz, 0, 0, 0, 0, 0))
-        
-    # def send_local_ned_velocity(self, vx, vy, vz):
-    #     msg = self.vehicle.message_factory.set_position_target_local_ned_encode(0, 0, 0, 
-    #                                                                             mavutil.mavlink.MAV_FRAME_BODY_OFFSET_NED,
-    #                                                                             0b0000111111000111,
-    #                                                                             0, 0, 0, vx, vy, vz, 0, 0, 0, 0, 0)
-    #     self.vehicle.send_mavlink(msg)
-    #     self.vehicle.flush()
+    def sendLocalNedVelocity(self, vx, vy, vz):
+        msg = self.vehicle.message_factory.set_position_target_local_ned_encode(
+            0,
+            0, 0,
+            mavutil.mavlink.MAV_FRAME_BODY_OFFSET_NED,
+            0b0000111111000111,
+            0, 0, 0,
+            vx, vy, vz,
+            0, 0, 0,
+            0, 0)
+        self.vehicle.send_mavlink(msg)
+        self.vehicle.flush()
 
-    def goto_location(self, lat, lon, alt):
-        print("Go To Location")
-        self.update_drone()
-        self.vehicle.mav.send(mavutil.mavlink.MAVLink_set_position_target_global_int_message(10, self.vehicle.target_system, 
-                                                                                             self.vehicle.target_component, 
-                                                                                             mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT,
-                                                                                             int(0b110111111000),
-                                                                                             int(lat*10**7),
-                                                                                             int(lon*10**7),
-                                                                                             2, 0, 0, 0, 0, 0, 0, 0, 0))
-        sleep(1)
-        print("Go To Command")
-        sleep(1)
-        
-        # msg = self.vehicle.recv_match(type='COMMAND_ACK', blocking=True)
-        # print(msg)
-        
-        sleep(1)
-        print("Go To Acknowledge")
-        sleep(1)
-        # print(self.lat, lat)
-        # print(self.lon, lon)
-        while((abs(self.lat - lat) >= 0.000001) and (abs(self.lon - lon) >= 0.000001)):
-            sleep(1)
-            msg = self.vehicle.recv_match(type='NAV_CONTROLLER_OUTPUT', blocking=True)
-            # print(self.lat, lat)
-            # print(self.lon, lon)
-            # print(self.alt)
-            self.update_drone()
-            self.vehicle.mav.send(mavutil.mavlink.MAVLink_set_position_target_global_int_message(10, self.vehicle.target_system,
-                                                                                                 self.vehicle.target_component,
-                                                                                                 mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT,
-                                                                                                 int(0b110111111000),
-                                                                                                 int(lat*10**7),
-                                                                                                 int(lon*10**7),
-                                                                                                 alt, 0, 0, 0, 0, 0, 0, 0, 0))
-            # sleep(1)
-            # print("Goto Command")
-            # sleep(1)
-
-            # msg = self.vehicle.recv_match(type='COMMAND_ACK', blocking=True)
-            print(msg)
-            print("-+-+-+-+--+-+-+-+--+-+-+-+--+-+-+-+--+-+-+-+--+-+-+-+-")
-        return
-
-    def move_forward(self, time=2, speed=0.5):
+    def moveForward(self, time=2, speed=0.5):
         counter = 0
         while counter < time:
             self.send_local_ned_velocity(speed, 0, 0)
@@ -168,7 +145,51 @@ class Drone:
             self.send_local_ned_velocity(0, -speed, 0)
             sleep(1)
             print('left')
-            counter += 1
+            counter = counter+1
+
+    def handle_drone_status(self,statusValue,droneDataCollection,roverDataCollection,exit_event):
+            print(statusValue)
+            statusKey=""
+            for status in DroneStatus:
+                if status.value == statusValue:
+                    statusKey= status
+                    break
+            print(statusValue,statusKey)
+
+            if statusKey == DroneStatus.FREE:
+                self.droneStatus=statusKey
+                droneFunctions.free(drone=self)
+            elif statusKey == DroneStatus.INIT:
+                self.droneStatus=statusKey
+                droneFunctions.init(drone=self,roverDataCollection=roverDataCollection,RoverStatus=RoverStatus)
+            elif statusKey == DroneStatus.WAIT_AT_HOME:
+                self.droneStatus=statusKey
+                droneFunctions.waitAtHome(drone=self,droneDataCollection=droneDataCollection,DroneStatus=DroneStatus,exit_event=exit_event)
+            elif statusKey == DroneStatus.GO_HOME:
+                self.droneStatus=statusKey
+                droneFunctions.goHome(drone=self,roverDataCollection=roverDataCollection,droneDataCollection=droneDataCollection,DroneStatus=DroneStatus,RoverStatus=RoverStatus,exit_event=exit_event)
+            elif statusKey == DroneStatus.NEXT_PANEL:
+                self.droneStatus=statusKey
+                droneFunctions.nextPanel(drone=self,roverDataCollection=roverDataCollection,droneDataCollection=droneDataCollection,DroneStatus=DroneStatus,RoverStatus=RoverStatus,exit_event=exit_event)
+            elif statusKey == DroneStatus.DOCK:
+                self.droneStatus=statusKey
+                droneFunctions.dock
+            elif statusKey == DroneStatus.PICKUP:
+                self.droneStatus=statusKey
+                droneFunctions.pickup(drone=self,droneDataCollection=droneDataCollection,roverDataCollection=roverDataCollection,DroneStatus=DroneStatus,RoverStatus=RoverStatus,exit_event=exit_event)
+            elif statusKey == DroneStatus.DROP:
+                self.droneStatus=statusKey
+                droneFunctions.drop(drone=self,droneDataCollection=droneDataCollection,roverDataCollection=roverDataCollection,DroneStatus=DroneStatus,RoverStatus=RoverStatus,exit_event=exit_event)
+            elif statusKey == DroneStatus.DROPPED:
+                self.droneStatus=statusKey
+                droneFunctions.dropped
+            elif statusKey == DroneStatus.WAITING:
+                self.droneStatus=statusKey
+                droneFunctions.waiting
+            else:
+                print("Invalid status")
+            # action()
+
 
 if __name__== "__main__":
     pass

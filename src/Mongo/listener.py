@@ -1,22 +1,14 @@
-from time import sleep
-from threading import Thread
-from ..util import keyboard_shutdown, create_inspection_area
+import time
+from threading import Event, Thread
+from ..util import keyboard_shutdown,createInspectionArea
 from .setup import update_drone_by_serial
-from ..drone_clean import drone_clean_drop, drone_clean_pickup, go_to_home, wait_at_home
-from ..Drone import Drone
-from ..Model import Model
+# from ..drone_clean import droneCleanDrop,droneCleanPickup,goToHome,waitAtHome
+from datetime import datetime
 
-def listener_mongo_data(drone:Drone, model:Model, drone_collection, rover_collection, exit_event):
-    print("Mongo Listener Started")
+def listenerMongoData(drone,drone_collection,roverDataCollection,exit_event):
+    print("Mongo Listner Started")
     serial=drone.serial
 
-    pipeline_takeoff = [{
-        '$match': {
-            '$and': [
-                {"updateDescription.updatedFields.takeOffStatus": {'$exists': True}},
-                {'operationType': "update"}]
-        }
-    }]
 
     pipeline_drone_status = [{
         '$match': {
@@ -35,50 +27,60 @@ def listener_mongo_data(drone:Drone, model:Model, drone_collection, rover_collec
                 drone_serial = document['fullDocument']['serial']
                 print("Change in drone status")
                 print(updated_drone_status)
+                if drone_serial == serial:
+                    drone.handle_drone_status(updated_drone_status,drone_collection,roverDataCollection,exit_event)
+
 
                 # if(document['fullDocument']['droneStatus'] == "Free"):
                     # print("Edge case, Deal later")
                     
-                if drone_serial == serial:
-                    # if(mongo_rover_status(drone=drone, rover_collection=rover_collection) == "Free"):
-                    # if((drone.drone_status == "Free") and updated_drone_status == "Drop"):
-                    if(updated_drone_status == "Drop"):
-                        drone.drone_status = 'Drop'
-                        # print("Drop")
-                        print("------------------Drop Rover---------------------")
-                        t = Thread(target=drone_clean_drop, args=(drone, model, exit_event, drone_collection, rover_collection))
-                        # t = Thread(target=drone_clean_drop,
-                        #        args=(drone,exit_event,drone_collection,rover_collection=rover_collection))
-                        t.start()
+                # if droneSerial == serial:
+                #     # if(mongoRoverStatus(drone=drone,roverDataCollection=roverDataCollection)=="Free"):
+                #     # if((drone.droneStatus=="Free") and updated_droneStatus=="Drop"):
+                #     if(updated_droneStatus=="Drop"):
+                #         drone.droneStatus='Drop'
+                #         print("Drop")
+                #         print("------------------Drop Rover---------------------")
+                #         t = Thread(target=droneCleanDrop,
+                #                 args=(drone,exit_event,drone_collection,roverDataCollection))
+                #         # t = Thread(target=droneCleanDrop,
+                #         #        args=(drone,exit_event,drone_collection,roverDataCollection=roverDataCollection))
+                #         t.start()
 
-                    elif(updated_drone_status == "Pickup"):
-                        # print("Pickup")
-                        print("------------------Pick Rover---------------------")
-                        t = Thread(target=drone_clean_pickup, args=(drone, model, exit_event, drone_collection, rover_collection))
-                        t.start()
+                #     elif(updated_droneStatus=="Pickup"):
+                #         print("Pickup")
+                #         print("------------------Pick Rover---------------------")
+                #         t = Thread(target=droneCleanPickup,
+                #                    args=(drone,exit_event,drone_collection,roverDataCollection))
+                #         t.start()
+                   
+                #     elif(updated_droneStatus=="goHome"):
+                #         print("------------------Going Back to Home------------------")
+                #         t = Thread(target=goToHome,
+                #                    args=(drone,drone_collection,roverDataCollection,exit_event))
+                #         t.start()
+
+                #     elif(updated_droneStatus=="waitAtHome"):
+                #         print("------------------Going Back to Home to wait------------------")
+                #         t = Thread(target=waitAtHome,
+                #                    args=(drone,drone_collection,exit_event))
+                #         t.start()
                     
-                    elif(updated_drone_status == "goHome"):
-                        print("------------------Going Back to Home------------------")
-                        t = Thread(target=go_to_home, args=(drone, drone_collection, rover_collection, exit_event))
-                        t.start()
+                #     elif(updated_droneStatus=="nextPanel"):
+                #         print("------------------Going to next panel------------------")
+                #         t = Thread(target=droneCleanDrop,
+                #                 args=(drone,exit_event,drone_collection,roverDataCollection))
+                #         # t = Thread(target=droneCleanDrop,
+                #         #        args=(drone,exit_event,drone_collection,roverDataCollection=roverDataCollection))
+                #         t.start()
+                #         # t = Thread(target=nextPanel,
+                #         #            args=(drone,exit_event,drone_collection))
+                #         # t.start()
 
-                    elif(updated_drone_status == "waitAtHome"):
-                        print("------------------Going Back to Home to wait------------------")
-                        t = Thread(target=wait_at_home, args=(drone, drone_collection, exit_event))
-                        t.start()
                     
-                    elif(updated_drone_status == "nextPanel"):
-                        print("------------------Going to next panel------------------")
-                        t = Thread(target=drone_clean_drop, args=(drone, model, exit_event, drone_collection, rover_collection))
-                        # t = Thread(target=drone_clean_drop,
-                        #        args=(drone,exit_event,drone_collection,rover_collection=rover_collection))
-                        t.start()
-                        # t = Thread(target=nextPanel,
-                        #            args=(drone,exit_event,drone_collection))
-                        # t.start()
-
-                    else:
-                        pass
+                    # else:
+                    #     pass
+                    
 
                 # elif updated_takeOffStatus == False and drone_serial == serial:
                 #     print("-------------------Land------------------------")
@@ -132,13 +134,13 @@ def listener_mongo_data(drone:Drone, model:Model, drone_collection, rover_collec
 #     except KeyboardInterrupt:
 #         keyboard_shutdown()
 
-def update_drone_data(drone_collection, drone:Drone):
+def update_drone_data(drone_collection, drone):
     try:
         while True:
             # print("Updating Drone")
             update_drone_by_serial(drone, drone_collection)
             # print(drone.serial)
-            sleep(1)
+            time.sleep(1)
     except KeyboardInterrupt:
         keyboard_shutdown()
 

@@ -15,20 +15,20 @@ class Camera:
         # host_ip=socket.gethostbyname(host_name)
         # print(host_ip)
 
-        client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        print("waiting for socket connection")
-        # serial = "ERROR000000000"
-        serial = drone.serial
-        if collection.find({'serial': serial}): 
-            drone_data = collection.find({'serial': serial})
-            host_ip = drone_data[0]['socketIP']
-            # host_ip="3.110.220.25"
-            # host_ip="3.109.133.16"
-            # host_name="ec2-43-205-129-4.ap-south-1.compute.amazonaws.com"
-            # host_ip=socket.gethostbyname(host_name)
-            port = drone_data[0]['socketPort']
-            print(host_ip, port)
-        # client_socket.connect((host_ip, port))
+        serial = "ERROR000000000"
+        # client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        # print("waiting for socket connection")
+        # serial = drone.serial
+        # if collection.find({'serial': serial}): 
+        #     drone_data = collection.find({'serial': serial})
+        #     host_ip = drone_data[0]['socketIP']
+        #     # host_ip="3.110.220.25"
+        #     # host_ip="3.109.133.16"
+        #     # host_name="ec2-43-205-129-4.ap-south-1.compute.amazonaws.com"
+        #     # host_ip=socket.gethostbyname(host_name)
+        #     port = drone_data[0]['socketPort']
+        #     print(host_ip, port)
+        # # client_socket.connect((host_ip, port))
 
         # #host_ip = '192.168.9.116'
         # #port = 5656
@@ -44,21 +44,21 @@ class Camera:
             # print(frame)
             self.image = frame
             socket_frame = imutils.resize(frame, width=360, height=360)
-            msg=[]
+            # msg=[]
             # msgTime=datetime.now()
             # msgTime = datetime.now() # time object
-            msg.append(socket_frame)
+            # msg.append(socket_frame)
             # msg.append(msgTime)
             # socketFrame=frame
-            a = pickle.dumps(socket_frame)
-            msg_frame = struct.pack("Q", len(a)) + a
+            # a = pickle.dumps(socket_frame)
+            # msg_frame = struct.pack("Q", len(a)) + a
 
-            try:
-                client_socket.sendall(msg_frame)
-                print("after sendall")
-            except:
-                print('Error')
-                pass
+            # try:
+            #     client_socket.sendall(msg_frame)
+            #     print("after sendall")
+            # except:
+            #     print('Error')
+            #     pass
             
             cv2.imshow(window_name, socket_frame)
 

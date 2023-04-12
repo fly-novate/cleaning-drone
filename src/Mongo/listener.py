@@ -1,11 +1,11 @@
 import time
 from threading import Event, Thread
-from ..util import keyboard_shutdown,createInspectionArea
+from ..util import keyboard_shutdown
 from .setup import update_drone_by_serial
 # from ..drone_clean import droneCleanDrop,droneCleanPickup,goToHome,waitAtHome
 from datetime import datetime
 
-def listenerMongoData(drone,drone_collection,roverDataCollection,exit_event):
+def listener_mongo_data(drone,drone_collection,roverDataCollection,exit_event):
     print("Mongo Listner Started")
     serial=drone.serial
 

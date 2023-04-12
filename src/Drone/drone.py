@@ -36,9 +36,7 @@ class Drone:
         _ = vehicle.messages.keys() #All parameters that can be fetched
         
         pos = vehicle.recv_match(type='GLOBAL_POSITION_INT', blocking=True)
-        attitude = self.vehicle.recv_match(type='ATTITUDE', blocking=True)
-        self.update_drone()
-
+        attitude = vehicle.recv_match(type='ATTITUDE', blocking=True)
         self.serial = drone_serial
         self.area={}
         self.socket_ip = ""
@@ -54,6 +52,8 @@ class Drone:
         self.camera = Camera()
         self.is_model_free = True
         self.yaw = math.degrees(attitude.yaw)
+        self.update_drone()
+
 
     def change_vehicle_mode(self, mode):
         print("Changing vehicle mode to", mode)

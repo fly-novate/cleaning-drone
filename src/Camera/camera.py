@@ -1,13 +1,13 @@
 from datetime import datetime
 import socket, pickle, imutils, struct, cv2
-from ..Drone import Drone
+# from ..Drone import Drone
 
 class Camera:
     def __init__(self):
         self.image = []
         self.camera = cv2.VideoCapture(0)
 
-    def send_camera_frames(self, drone:Drone, collection):
+    def send_camera_frames(self, drone, collection):
         print("hey")
         # host_name="ec2-43-205-129-4.ap-south-1.compute.amazonaws.com"
         # host_name="localhost"
@@ -28,7 +28,7 @@ class Camera:
             # host_ip=socket.gethostbyname(host_name)
             port = drone_data[0]['socketPort']
             print(host_ip, port)
-        client_socket.connect((host_ip, port))
+        # client_socket.connect((host_ip, port))
 
         # #host_ip = '192.168.9.116'
         # #port = 5656
